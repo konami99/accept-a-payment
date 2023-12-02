@@ -25,7 +25,6 @@ set :bind, '0.0.0.0'
 set :views, settings.public_folder
 
 get '/' do
-  binding.pry
   @uid = params['uid']
   content_type 'text/html'
   #send_file File.join(settings.public_folder, 'index.html')
@@ -41,7 +40,6 @@ get '/config' do
 end
 
 get '/create-payment-intent' do
-  binding.pry
   # Create a PaymentIntent with the amount, currency, and a payment method type.
   #
   # See the documentation [0] for the full list of supported parameters.
@@ -53,7 +51,7 @@ get '/create-payment-intent' do
       automatic_payment_methods: { enabled: true, allow_redirects: 'never' }, # Configure payment methods in the dashboard.
       currency: 'twd',
       metadata: {
-        "uid": "6735"
+        "uid": params['uid']
       }
     })
   rescue Stripe::StripeError => e

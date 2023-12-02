@@ -87,7 +87,6 @@
             confirmParams: {
               return_url: `${window.location.origin}/return.html`,
             },
-            redirect: "if_required"
           });
       
           console.log('here')
@@ -108,7 +107,7 @@
   <body>
     <main>
       <h1>Payment</h1>
-      <input id="test" data-uid="<%= @uid %>" />
+      <input id="test" data-uid="<%= @uid %>" value="<%= @uid %>" />
       <p>Enable more payment method types <a
         href="https://dashboard.stripe.com/settings/payment_methods" target="_blank">in your
         dashboard</a>.</p>
