@@ -11,15 +11,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const stripe = Stripe(publishableKey, {
     apiVersion: '2020-08-27',
+    locale: 'zh-TW',
   });
 
   // On page load, we create a PaymentIntent on the server so that we have its clientSecret to
   // initialize the instance of Elements below. The PaymentIntent settings configure which payment
   // method types to display in the PaymentElement.
+
+  const testElement = document.getElementById('test')
+  const value = testElement.dataset.uid;
+
   const {
     error: backendError,
     clientSecret
-  } = await fetch('/create-payment-intent').then(r => r.json());
+  } = await fetch('/create-payment-intent?uid=' + value).then(r => r.json());
   if (backendError) {
     addMessage(backendError.message);
   }
@@ -68,8 +73,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/return.html`,
-      }
+      },
+      redirect: "if_required"
     });
+
+    console.log('here')
 
     if (stripeError) {
       addMessage(stripeError.message);

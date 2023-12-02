@@ -13,7 +13,6 @@ class ConfigHelper
     'STATIC_DIR',
     'STRIPE_PUBLISHABLE_KEY',
     'STRIPE_SECRET_KEY',
-    'STRIPE_WEBHOOK_SECRET',
   ]
 
   def self.check_env!
@@ -124,7 +123,7 @@ class ConfigHelper
         DOC
         set_dotenv!('STRIPE_SECRET_KEY', '')
         set_dotenv!('STRIPE_PUBLISHABLE_KEY', '')
-        set_dotenv!('STRIPE_WEBHOOK_SECRET', '')
+        
         exit
       else
         puts <<~DOC
@@ -145,7 +144,7 @@ class ConfigHelper
           config = @cli_config.fetch("default", @cli_config[@cli_config.keys.first])
           set_dotenv!('STRIPE_SECRET_KEY', config["test_mode_api_key"])
           set_dotenv!('STRIPE_PUBLISHABLE_KEY', config["test_mode_publishable_key"])
-          set_dotenv!('STRIPE_WEBHOOK_SECRET', `stripe listen --print-secret`)
+          #set_dotenv!('STRIPE_WEBHOOK_SECRET', `stripe listen --print-secret`)
           return
         end
       end
@@ -195,21 +194,7 @@ class ConfigHelper
       end
     end
 
-    whsec = ENV['STRIPE_WEBHOOK_SECRET']
-    if whsec.nil? || !whsec.start_with?('whsec_')
-      puts <<~DOC
-        Your webhook signing secret (STRIPE_WEBHOOK_SECRET) is configured
-        incorrectly or doesn't match the expected format. You can find your webhook
-        signing secret in the Stripe dashboard here:
-        https://dashboard.stripe.com/test/apikeys. or if testing with the
-        Stripe CLI by running:
-
-          stripe listen --print-secret
-
-        Be sure to set that in the .env file.
-      DOC
-      exit
-    end
+    #STRIPE_WEBHOOK_SECRET
   end
 
   def dotenv_exists?

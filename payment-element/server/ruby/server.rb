@@ -1,6 +1,7 @@
 require 'stripe'
 require 'sinatra'
 require 'dotenv'
+require 'pry-byebug'
 require './config_helper.rb'
 
 # Copy the .env.example in the root into a .env file in this folder
@@ -21,9 +22,16 @@ set :public_folder, File.join(File.dirname(__FILE__), ENV['STATIC_DIR'])
 set :port, 4242
 set :bind, '0.0.0.0'
 
+set :views, settings.public_folder
+
 get '/' do
+  binding.pry
+  @uid = params['uid']
   content_type 'text/html'
-  send_file File.join(settings.public_folder, 'index.html')
+  #send_file File.join(settings.public_folder, 'index.html')
+
+  
+  erb :index
 end
 
 get '/config' do
@@ -33,6 +41,7 @@ get '/config' do
 end
 
 get '/create-payment-intent' do
+  binding.pry
   # Create a PaymentIntent with the amount, currency, and a payment method type.
   #
   # See the documentation [0] for the full list of supported parameters.
@@ -41,8 +50,11 @@ get '/create-payment-intent' do
   begin
     payment_intent = Stripe::PaymentIntent.create({
       amount: 5999, # Charge the customer 59.99 EUR
-      automatic_payment_methods: { enabled: true }, # Configure payment methods in the dashboard.
-      currency: 'eur',
+      automatic_payment_methods: { enabled: true, allow_redirects: 'never' }, # Configure payment methods in the dashboard.
+      currency: 'twd',
+      metadata: {
+        "uid": "6735"
+      }
     })
   rescue Stripe::StripeError => e
     halt 400,
@@ -62,46 +74,3 @@ get '/create-payment-intent' do
   }.to_json
 end
 
-post '/webhook' do
-  # Use webhooks to receive information about asynchronous payment events.
-  # For more about our webhook events check out https://stripe.com/docs/webhooks.
-  webhook_secret = ENV['STRIPE_WEBHOOK_SECRET']
-  payload = request.body.read
-  if !webhook_secret.empty?
-    # Retrieve the event by verifying the signature using the raw body and secret if webhook signing is configured.
-    sig_header = request.env['HTTP_STRIPE_SIGNATURE']
-    event = nil
-
-    begin
-      event = Stripe::Webhook.construct_event(
-        payload, sig_header, webhook_secret
-      )
-    rescue JSON::ParserError => e
-      # Invalid payload
-      status 400
-      return
-    rescue Stripe::SignatureVerificationError => e
-      # Invalid signature
-      puts '⚠️  Webhook signature verification failed.'
-      status 400
-      return
-    end
-  else
-    data = JSON.parse(payload, symbolize_names: true)
-    event = Stripe::Event.construct_from(data)
-  end
-
-  if event.type == 'payment_intent.succeeded'
-    payment_intent = event.data.object
-    puts '💰 Payment received!'
-    # Fulfill any orders, e-mail receipts, etc
-    # To cancel the payment you will need to issue a Refund (https://stripe.com/docs/api/refunds)
-  end
-  if event.type == 'payment_intent.payment_failed'
-    payment_intent = event.data.object
-    puts '❌ Payment failed.'
-  end
-
-  content_type 'application/json'
-  { status: 'success' }.to_json
-end
